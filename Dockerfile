@@ -26,6 +26,20 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Also remove the message regarding unminimize.
 # Note that Ubuntu 22.04 uses snapd for firefox, which does not work properly,
 # so we install it from ppa:mozillateam/ppa instead.
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install software-properties-common wget curl -y && echo "muddei"
+
+RUN add-apt-repository ppa:deadsnakes/ppa -y && \
+rm /etc/apt/sources.list.d/deadsnakes* && \
+sh -c 'echo "deb https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy main" > /etc/apt/sources.list.d/deadsnakes.list' && \
+apt-get update
+
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+RUN curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg && \
+sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+
+
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         apt-utils \
@@ -76,7 +90,16 @@ RUN apt-get update && \
         xfonts-base xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic \
         libopengl0 mesa-utils libglu1-mesa libgl1-mesa-dri libjpeg8 libjpeg62 \
         xauth xdg-utils \
-        x11vnc && \
+        x11vnc \
+        python3.7 python3.7-venv python3.7-dev \
+        python3.11 python3.11-venv python3.11-dev \
+        git vim openssh-server curl build-essential nginx \
+        supervisor libldap2-dev libsasl2-dev libpq-dev ghostscript libjpeg-dev libfreetype6-dev \
+        zlib1g-dev freetds-dev libxmlsec1-dev libxml2-dev libxslt1-dev libblas-dev liblapack-dev \
+        libatlas-base-dev gfortran redis-server libglu1-mesa libcairo2 libcups2 libdbus-glib-1-2 \
+        libxinerama1 libsm6 tmpreaper wkhtmltopdf swig libaio1 \
+        postgresql pgadmin4 libnss3 unzip snapd \
+        && \
     chmod 755 /usr/local/share/zsh/site-functions && \
     add-apt-repository -y ppa:mozillateam/ppa && \
     echo 'Package: *' > /etc/apt/preferences.d/mozilla-firefox && \
@@ -95,6 +118,22 @@ RUN apt-get update && \
     rm -f /etc/xdg/autostart/lxpolkit.desktop && \
     chmod a-x /usr/bin/lxpolkit && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN sudo wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb && \
+sudo apt update && \
+sudo apt install ./code.deb -y && \
+rm -f code.deb && \
+code --no-sandbox --install-extension ms-vscode.cpptools
+
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+sudo apt update && \
+sudo apt install -y ./google-chrome-stable_current_amd64.deb && \
+rm -f google-chrome-stable_current_amd64.deb && \
+curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$(google-chrome --version | cut -d ' ' -f 3 | cut -d . -f 1) > version.txt && \
+wget https://chromedriver.storage.googleapis.com/$(cat version.txt)/chromedriver_linux64.zip -O chromedriver.zip && \
+unzip chromedriver.zip && \
+rm -f version.txt chromedriver.zip && \
+sudo mv chromedriver /usr/local/bin/
 
 # Install websokify and noVNC
 RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
