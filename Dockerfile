@@ -98,7 +98,7 @@ RUN apt-get update && \
         zlib1g-dev freetds-dev libxmlsec1-dev libxml2-dev libxslt1-dev libblas-dev liblapack-dev \
         libatlas-base-dev gfortran redis-server libglu1-mesa libcairo2 libcups2 libdbus-glib-1-2 \
         libxinerama1 libsm6 tmpreaper wkhtmltopdf swig libaio1 \
-        postgresql pgadmin4 libnss3 unzip snapd \
+        postgresql pgadmin4 libnss3 unzip \
         && \
     chmod 755 /usr/local/share/zsh/site-functions && \
     add-apt-repository -y ppa:mozillateam/ppa && \
@@ -122,8 +122,13 @@ RUN apt-get update && \
 RUN sudo wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb && \
 sudo apt update && \
 sudo apt install ./code.deb -y && \
-rm -f code.deb && \
-code --no-sandbox --install-extension ms-vscode.cpptools
+rm -f code.deb
+
+RUN sudo wget https://download.jetbrains.com/python/pycharm-community-2023.1.2.tar.gz && \
+tar -xf pycharm-community-2023.1.2.tar.gz && \
+mv pycharm-community-2023.1.2 /usr/ && \
+mv /usr/pycharm-community-2023.1.2 /usr/pycharm && \
+rm -f pycharm-community-2023.1.2.tar.gz
 
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
 sudo apt update && \
@@ -208,9 +213,19 @@ RUN mkdir -p $DOCKER_HOME/.config/mozilla && \
     chmod -R a+r $DOCKER_HOME && \
     find $DOCKER_HOME -type d -exec chmod a+x {} \;
 
+
 WORKDIR $DOCKER_HOME
 
 ENV DOCKER_CMD=startvnc.sh
+
+USER ubuntu
+
+RUN code --install-extension eamodio.gitlens && \
+code --install-extension ms-python.autopep8 && \
+code --install-extension ms-python.python && \
+code --install-extension ms-python.vscode-pylance && \
+mkdir ~/Desktop && \
+ln -s /usr/pycharm/bin/pycharm.sh ~/Desktop/pycharm
 
 USER root
 ENTRYPOINT ["/sbin/my_init", "--", "/sbin/setuser", "ubuntu"]
